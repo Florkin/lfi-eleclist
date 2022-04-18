@@ -10,8 +10,8 @@ namespace App\Handler;
 
 use App\Entity\Address;
 use App\Entity\Elector;
+use App\Repository\ElectorRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use League\Csv\MapIterator;
 use League\Csv\Reader;
 
 class ElecListCsvRecordHandler
@@ -20,13 +20,19 @@ class ElecListCsvRecordHandler
      * @var EntityManagerInterface
      */
     private $entityManager;
+    /**
+     * @var ElectorRepository
+     */
+    private $electorRepository;
 
     /**
      * @param EntityManagerInterface $entityManager
+     * @param ElectorRepository $electorRepository
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, ElectorRepository $electorRepository)
     {
         $this->entityManager = $entityManager;
+        $this->electorRepository = $electorRepository;
     }
 
     public function importFile(Reader $file)
@@ -45,6 +51,15 @@ class ElecListCsvRecordHandler
 
             $counter += 1;
         };
+    }
+
+    public function clear()
+    {
+        foreach ($this->electorRepository->findAll() as $elector) {
+            $this->entityManager->remove($elector);
+        }
+
+        $this->entityManager->flush();
     }
 
     private function saveRecord(array $record)

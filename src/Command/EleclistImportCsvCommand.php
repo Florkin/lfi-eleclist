@@ -7,6 +7,7 @@ use App\Service\CsvReader;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -45,9 +46,8 @@ class EleclistImportCsvCommand extends Command
             ->addOption(
                 'clear',
                 'c',
-                InputArgument::OPTIONAL,
-                'Clear all before import (0 or 1)',
-                0
+                InputOption::VALUE_NONE,
+                'Clear all before import'
             );
     }
 
@@ -55,7 +55,10 @@ class EleclistImportCsvCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
-        $clear = $input->getOption('clear');
+
+        if ($input->getOption('clear')) {
+            $this->recordHandler->clear();
+        }
 
         $this->recordHandler->importFile($this->csvReader->getFile($filePath));
 

@@ -48,8 +48,7 @@ class Address
     private $city;
 
     /**
-     * @ORM\OneToOne(targetEntity=elector::class, inversedBy="address", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity=Elector::class, mappedBy="address", cascade={"persist", "remove"})
      */
     private $elector;
 
@@ -130,13 +129,23 @@ class Address
         return $this;
     }
 
-    public function getElector(): ?elector
+    public function getElector(): ?Elector
     {
         return $this->elector;
     }
 
-    public function setElector(elector $elector): self
+    public function setElector(?Elector $elector): self
     {
+        // unset the owning side of the relation if necessary
+        if ($elector === null && $this->elector !== null) {
+            $this->elector->setAddress(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($elector !== null && $elector->getAddress() !== $this) {
+            $elector->setAddress($this);
+        }
+
         $this->elector = $elector;
 
         return $this;

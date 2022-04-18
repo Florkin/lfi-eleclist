@@ -38,7 +38,7 @@ class Elector
     private $vote_office;
 
     /**
-     * @ORM\OneToOne(targetEntity=Address::class, mappedBy="elector", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=Address::class, inversedBy="elector", cascade={"persist", "remove"})
      */
     private $address;
 
@@ -100,13 +100,8 @@ class Elector
         return $this->address;
     }
 
-    public function setAddress(Address $address): self
+    public function setAddress(?Address $address): self
     {
-        // set the owning side of the relation if necessary
-        if ($address->getElector() !== $this) {
-            $address->setElector($this);
-        }
-
         $this->address = $address;
 
         return $this;
