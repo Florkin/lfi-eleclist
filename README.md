@@ -31,7 +31,7 @@ Ne pas oublier de referencer l'issue dans la Pull Request
 - Pour effacer les données déjà présentes, ajouter l'argument "--clear" ou "-c"  
 exemple : `bin/console eleclist:import-csv files/filename.csv --clear`
 
-### Setup Docker (linux) :
+## Setup Docker (linux) :
 - sudo docker-compose up -d --build
 - sudo docker exec -it -u1000 php74-eleclist-container bash
 - composer install
