@@ -1,7 +1,7 @@
 # LFI Eleclist
 ## Outil d'import de listes electorales et de regroupement d'addresses
 
-### Workflow
+## Workflow
 #### Issues
 - Si vous avez une idée, formalisez la dans une issue avant de travailler. **Pas d'issue, pas de dev** !
 - Mettez des labels : evolution, bug...
@@ -25,7 +25,7 @@ Il est aussi possible de faire des commits multilignes :
 Ne pas oublier de referencer l'issue dans la Pull Request
 
 
-### Importer CSV :
+## Importer CSV :
 - Placer le fichier dans /files
 - Executer `bin/console eleclist:import-csv files/filename.csv`
 - Pour effacer les données déjà présentes, ajouter l'argument "--clear" ou "-c"  
