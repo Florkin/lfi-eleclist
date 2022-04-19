@@ -5,6 +5,7 @@
 #### Issues
 - Si vous avez une idée, formalisez la dans une issue avant de travailler. **Pas d'issue, pas de dev** !
 - Mettez des labels : evolution, bug...
+- **Indiquez dans un commentaire si vous commencez le traitement d'une issue**
 
 #### Branches
 Format de nom de branche : feat/[NUMERO D'ISSUE]/description-courte  
