@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+
+    mariadb-service:
+        image: mariadb:latest
+        container_name: mariadb-eleclist-container
+        restart: on-failure
+        ports:
+            - "3306:3306"
+        volumes:
+            - db-data-eleclist:/var/lib/mysql
+        environment:
+            MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+        networks:
+            - dev
+
+    phpmyadmin-service:
+        image: phpmyadmin
+        container_name: phpmyadmin-eleclist-container
+        restart: on-failure
+        depends_on:
+            - mariadb-service
+        ports:
+            - "8080:80"
+        environment:
+            PMA_HOST: mariadb-service
+        networks:
+            - dev
+
+    php74-service:
+        build: php
+        container_name: php74-eleclist-container
+        ports:
+            - "8741:80"
+        volumes:
+            - ./php/vhosts:/etc/apache2/sites-enabled
+            - ./:/var/www
+        restart: on-failure
+        networks:
+            - dev
+
+networks:
+    dev:
+
+volumes:
+    db-data-eleclist:
