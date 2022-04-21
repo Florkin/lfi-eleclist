@@ -31,12 +31,15 @@ class EleclistImportCsvCommand extends Command
      * @param ElecListCsvRecordHandler $recordHandler
      * @param string|null $name
      */
-    public function __construct(CsvReader $csvReader, ElecListCsvRecordHandler $recordHandler, string $name = null)
-    {
-        parent::__construct($name);
-
+    public function __construct(
+        CsvReader $csvReader,
+        ElecListCsvRecordHandler $recordHandler,
+        string $name = null
+    ) {
         $this->csvReader = $csvReader;
         $this->recordHandler = $recordHandler;
+
+        parent::__construct($name);
     }
 
     protected function configure(): void
