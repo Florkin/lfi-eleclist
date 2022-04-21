@@ -8,8 +8,8 @@
 - **Indiquez dans un commentaire si vous commencez le traitement d'une issue**
 
 #### Branches
-Format de nom de branche : feat/[NUMERO D'ISSUE]/description-courte  
-ex: `feat/1/install-docker`
+Format de nom de branche : feat/#[NUMERO D'ISSUE]/description-courte  
+ex: `feat/#1/install-docker`
 
 #### Commits
 Format de message de commit : [issue #[NUMERO D'ISSUE]] description du commit
