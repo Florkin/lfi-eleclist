@@ -33,8 +33,7 @@ Ne pas oublier de referencer l'issue dans la Pull Request
 exemple : `bin/console eleclist:import-csv files/filename.csv --clear`
 
 ## Setup Docker (linux) :
-- sudo docker-compose up -d --build
-- sudo docker exec -it -u1000 php74-eleclist-container bash
-- composer install
-- connect database : DATABASE_URL="mysql://root:@mariadb-service:3306/eleclist?serverVersion=10.8&charset=utf8mb4"
-- connect pma : root / emptyPassword
+- `make start` (equivalent to `make build` then `make up`) Build & up l'image docker
+- `make vendor` Installe les vendor
+- `make bash` Accéder à la console du conteneur symfony
+- Connect phpmyadmin : `http://localhost:8080/` - `root / emptyPassword`
