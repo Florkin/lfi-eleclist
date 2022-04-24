@@ -180,6 +180,12 @@
             "src/Kernel.php"
         ]
     },
+    "symfony/http-client": {
+        "version": "v5.4.7"
+    },
+    "symfony/http-client-contracts": {
+        "version": "v2.5.1"
+    },
     "symfony/http-foundation": {
         "version": "v5.4.6"
     },
@@ -195,7 +201,13 @@
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
     },
+    "symfony/mime": {
+        "version": "v5.4.7"
+    },
     "symfony/polyfill-intl-grapheme": {
+        "version": "v1.25.0"
+    },
+    "symfony/polyfill-intl-idn": {
         "version": "v1.25.0"
     },
     "symfony/polyfill-intl-normalizer": {

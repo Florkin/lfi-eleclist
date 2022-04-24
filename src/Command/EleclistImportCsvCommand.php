@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Handler\ElecListCsvRecordHandler;
+use App\Handler\AddressRequestHandler;
 use App\Service\CsvReader;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,27 +18,30 @@ class EleclistImportCsvCommand extends Command
 
     protected static $defaultDescription = 'Import an electoral list from csv';
 
-    /**
-     * @var EleclistImportCsvCommand
-     */
-    private $csvReader;
-    /**
-     * @var ElecListCsvRecordHandler
-     */
-    private $recordHandler;
+    /** @var CsvReader */
+    private CsvReader $csvReader;
+
+    /** @var ElecListCsvRecordHandler */
+    private ElecListCsvRecordHandler $recordHandler;
+
+    /** @var AddressRequestHandler */
+    private AddressRequestHandler $addressRequest;
 
     /**
      * @param CsvReader $csvReader
      * @param ElecListCsvRecordHandler $recordHandler
+     * @param AddressRequestHandler $addressRequest
      * @param string|null $name
      */
     public function __construct(
         CsvReader $csvReader,
         ElecListCsvRecordHandler $recordHandler,
+        AddressRequestHandler $addressRequest,
         string $name = null
     ) {
         $this->csvReader = $csvReader;
         $this->recordHandler = $recordHandler;
+        $this->addressRequest = $addressRequest;
 
         parent::__construct($name);
     }
@@ -63,7 +67,8 @@ class EleclistImportCsvCommand extends Command
             $this->recordHandler->clear();
         }
 
-        $this->recordHandler->importFile($this->csvReader->getFile($filePath));
+        $this->addressRequest->request($filePath);
+//        $this->recordHandler->importFile($this->csvReader->getFile($filePath));
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
