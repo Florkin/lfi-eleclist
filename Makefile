@@ -1,5 +1,6 @@
 USER = -it -u1000
 SYMFO = php74-eleclist-container
+PROJECT_PATH = /var/www
 
 build:
 	docker-compose build
@@ -38,3 +39,6 @@ vendor: composer.lock
 
 cc:
 	docker-compose exec $(USER) $(SYMFO) bin/console cache:clear
+
+file-folder-permissions:
+	chmod 777 public/files/

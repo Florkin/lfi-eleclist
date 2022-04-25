@@ -54,7 +54,6 @@ class ElecListCsvRecordHandler
         $counter = 0;
 
         foreach ($records as $key => $record) {
-            dump($record);
             $this->saveRecord($record);
 
             if ($counter === 1000 || $key === $count) {
@@ -103,10 +102,10 @@ class ElecListCsvRecordHandler
         $address
             ->setAdd1(trim($record['add1']))
             ->setAdd2(trim($record['add2']))
-            ->setStreet(trim($record['street']))
-            ->setCity(trim($record['city']))
-            ->setPostcode(trim($record['postcode']))
-            ->setNumber(trim($record['house_number']));
+            ->setStreet(trim($record['result_name']?? $record['street']))
+            ->setCity(trim($record['result_city'] ?? $record['city']))
+            ->setPostcode(trim($record['result_postcode'] ?? $record['postcode']))
+            ->setNumber(trim($record['result_housenumber'] ?? $record['house_number']));
 
         return $address;
     }

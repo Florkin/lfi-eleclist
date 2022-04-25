@@ -9,6 +9,7 @@
 namespace App\Service;
 
 use League\Csv\Reader;
+use League\Csv\Writer;
 
 class CsvReader
 {
@@ -18,17 +19,22 @@ class CsvReader
     /** @var Reader */
     private Reader $reader;
 
+    /** @var string  */
+    private string $fileFolder;
+
     /**
      * @param array $params
+     * @param string $fileFolder
      */
-    public function __construct(array $params = [])
+    public function __construct(array $params = [], string $fileFolder = '')
     {
         $this->params = $params;
+        $this->fileFolder = $fileFolder;
     }
 
-    public function getRecords(string $path): iterable
+    public function getRecords(string $csv): iterable
     {
-        $reader = $this->mapHeader(Reader::createFromPath('%kernel.root_dir%/../' . $path, "r"));
+        $reader = $this->mapHeader(Reader::createFromString($csv));
         $reader
             ->setDelimiter(',')
             ->setHeaderOffset(0);
@@ -51,5 +57,15 @@ class CsvReader
     public function getReader()
     {
         return $this->reader;
+    }
+
+    public function saveCsv(string $newCsvString)
+    {
+        $csv = Reader::createFromString($newCsvString)
+            ->setHeaderOffset(0);
+
+        $file = Writer::createFromPath($this->fileFolder . '/enriched_list.csv', 'w+');
+        $file->insertOne($csv->getHeader());
+        $file->insertAll($csv->getRecords());
     }
 }

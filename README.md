@@ -34,6 +34,7 @@ Ne pas oublier de referencer l'issue dans la Pull Request
 
 ## Importer CSV :
 - Placer le fichier dans /files
+- Executer `make file-folder-permissions`
 - Executer `bin/console eleclist:import-csv files/filename.csv`
 - Pour effacer les données déjà présentes, ajouter l'argument "--clear" ou "-c"  
   exemple : `bin/console eleclist:import-csv files/filename.csv --clear`
