@@ -24,9 +24,18 @@ services:
         arguments:
             $params: '%address_api_data%'
 
+    App\Service\CsvReader:
+        arguments:
+            $params: '%csv_header_mapping%'
+
+    App\Handler\ElecListCsvRecordHandler:
+        arguments:
+            $params: '%csv_header_mapping%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
 # config/services.yaml
 imports:
-    - { resource: 'address_data_api.yaml' }
+    - { resource: 'app_config/address_data_api.yaml' }
+    - { resource: 'app_config/csv_header_mapping.yaml' }

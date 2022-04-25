@@ -67,8 +67,7 @@ class EleclistImportCsvCommand extends Command
             $this->recordHandler->clear();
         }
 
-        $this->addressRequest->request($filePath);
-//        $this->recordHandler->importFile($this->csvReader->getFile($filePath));
+        $this->recordHandler->importFile($filePath);
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 

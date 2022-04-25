@@ -24,7 +24,7 @@ class AddressRequestHandler
      * @param HttpClientInterface $httpClient
      * @param array $params
      */
-    public function __construct(HttpClientInterface $httpClient, array $params)
+    public function __construct(HttpClientInterface $httpClient, array $params = [])
     {
         $this->httpClient = $httpClient;
         $this->params = $params;

@@ -25,15 +25,15 @@ Il est aussi possible de faire des commits multilignes :
 #### Pull Requests
 Ne pas oublier de referencer l'issue dans la Pull Request
 
+## Setup Docker (linux) :
+- `make start` (equivalent to `make build` then `make up`) Build & up l'image docker
+- `make vendor` Installe les vendor
+- `make database` Crée la base de donnée et execute les migrations
+- `make bash` Accéder à la console du conteneur symfony
+- Connect phpmyadmin : `http://localhost:8080/` - `root / emptyPassword`
 
 ## Importer CSV :
 - Placer le fichier dans /files
 - Executer `bin/console eleclist:import-csv files/filename.csv`
 - Pour effacer les données déjà présentes, ajouter l'argument "--clear" ou "-c"  
-exemple : `bin/console eleclist:import-csv files/filename.csv --clear`
-
-## Setup Docker (linux) :
-- `make start` (equivalent to `make build` then `make up`) Build & up l'image docker
-- `make vendor` Installe les vendor
-- `make bash` Accéder à la console du conteneur symfony
-- Connect phpmyadmin : `http://localhost:8080/` - `root / emptyPassword`
+  exemple : `bin/console eleclist:import-csv files/filename.csv --clear`

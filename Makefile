@@ -25,6 +25,10 @@ restart-clear:
 	docker-compose down -v
 	docker-compose up --build -d
 
+database:
+	docker exec $(USER) $(SYMFO) bin/console doctrine:database:create
+	docker exec $(USER) $(SYMFO) bin/console doctrine:migration:migrate
+
 bash:
 	docker exec $(USER) $(SYMFO) bash
 
