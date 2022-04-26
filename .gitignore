@@ -5,9 +5,10 @@
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
+/public/temp/
 /var/
 /vendor/
-/files/
 ###< symfony/framework-bundle ###
+files/
 
 .idea

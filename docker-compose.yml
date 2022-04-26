@@ -13,7 +13,7 @@ services:
         environment:
             MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
         networks:
-            - dev
+            - symfony
 
     phpmyadmin-service:
         image: phpmyadmin
@@ -26,10 +26,15 @@ services:
         environment:
             PMA_HOST: mariadb-service
         networks:
-            - dev
+            - symfony
 
     php74-service:
-        build: php
+        build:
+            context: ./dockerfiles
+            dockerfile: php.dockerfile
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
         container_name: php74-eleclist-container
         ports:
             - "8741:80"
@@ -38,10 +43,28 @@ services:
             - ./:/var/www
         restart: on-failure
         networks:
-            - dev
+            - symfony
+
+    composer:
+        build:
+            context: ./dockerfiles
+            dockerfile: composer.dockerfile
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
+        container_name: composer
+        volumes:
+            - ./:/var/www
+        working_dir: /var/www
+        depends_on:
+            - php74-service
+        user: symfony
+        entrypoint: [ 'composer', '--ignore-platform-reqs' ]
+        networks:
+            - symfony
 
 networks:
-    dev:
+    symfony:
 
 volumes:
     db-data-eleclist:

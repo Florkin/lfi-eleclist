@@ -2,7 +2,8 @@
 
 namespace App\Command;
 
-use App\Handler\ElecListCsvRecordHandler;
+use App\Handler\ElecListCsvImporter;
+use App\Handler\AddressRequestHandler;
 use App\Service\CsvReader;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,26 +18,32 @@ class EleclistImportCsvCommand extends Command
 
     protected static $defaultDescription = 'Import an electoral list from csv';
 
-    /**
-     * @var EleclistImportCsvCommand
-     */
-    private $csvReader;
-    /**
-     * @var ElecListCsvRecordHandler
-     */
-    private $recordHandler;
+    /** @var CsvReader */
+    private CsvReader $csvReader;
+
+    /** @var ElecListCsvImporter */
+    private ElecListCsvImporter $recordHandler;
+
+    /** @var AddressRequestHandler */
+    private AddressRequestHandler $addressRequest;
 
     /**
      * @param CsvReader $csvReader
-     * @param ElecListCsvRecordHandler $recordHandler
+     * @param ElecListCsvImporter $recordHandler
+     * @param AddressRequestHandler $addressRequest
      * @param string|null $name
      */
-    public function __construct(CsvReader $csvReader, ElecListCsvRecordHandler $recordHandler, string $name = null)
-    {
-        parent::__construct($name);
-
+    public function __construct(
+        CsvReader $csvReader,
+        ElecListCsvImporter $recordHandler,
+        AddressRequestHandler $addressRequest,
+        string $name = null
+    ) {
         $this->csvReader = $csvReader;
         $this->recordHandler = $recordHandler;
+        $this->addressRequest = $addressRequest;
+
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -59,8 +66,12 @@ class EleclistImportCsvCommand extends Command
         if ($input->getOption('clear')) {
             $this->recordHandler->clear();
         }
+        $newCsvString = $this->addressRequest->request($filePath);
+        $newFilePath = $this->csvReader->saveCsv($newCsvString);
 
-        $this->recordHandler->importFile($this->csvReader->getFile($filePath));
+        if ($this->recordHandler->importFile($newFilePath)) {
+            $this->csvReader->delete($newFilePath);
+        }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 

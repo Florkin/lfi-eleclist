@@ -1,0 +1,16 @@
+parameters:
+  address_api_data:
+    api_url: https://api-adresse.data.gouv.fr/search/csv/
+    fields_to_send:
+      - house_number
+      - street
+      - add1
+      - add2
+      - postcode
+      - city
+
+    fields_to_receive:
+      - result_housenumber
+      - result_name
+      - result_city
+      - result_postcode

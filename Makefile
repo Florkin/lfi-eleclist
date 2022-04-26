@@ -1,5 +1,6 @@
 USER = -it -u1000
 SYMFO = php74-eleclist-container
+PROJECT_PATH = /var/www
 
 build:
 	docker-compose build
@@ -25,12 +26,16 @@ restart-clear:
 	docker-compose down -v
 	docker-compose up --build -d
 
-bash:
-	docker exec $(USER) $(SYMFO) bash
+database:
+	docker exec -it $(SYMFO) bin/console doctrine:database:create
+	docker exec -it $(SYMFO) bin/console doctrine:migration:migrate
+
+sh:
+	docker exec -it $(SYMFO) sh
 
 vendor: composer.lock
 	rm -rf ./vendor
 	symfony composer install --no-progress --prefer-dist --optimize-autoloader
 
 cc:
-	docker-compose exec $(USER) $(SYMFO) bin/console cache:clear
+	docker-compose exec -it $(SYMFO) bin/console cache:clear

@@ -1,0 +1,15 @@
+parameters:
+  csv_header_mapping:
+    column_headers:
+      firstname: prénoms
+      lastname: nom d'usage
+      birthname: nom de naissance
+      vote_office: code du bureau de vote
+      house_number: numéro de voie
+      street: libellé de voie
+      add1: complément 1
+      add2: complément 2
+      postcode: code postal
+      city: commune
+
+
