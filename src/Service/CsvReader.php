@@ -10,6 +10,7 @@ namespace App\Service;
 
 use League\Csv\Reader;
 use League\Csv\Writer;
+use Symfony\Component\Filesystem\Filesystem;
 
 class CsvReader
 {
@@ -19,22 +20,30 @@ class CsvReader
     /** @var Reader */
     private Reader $reader;
 
-    /** @var string  */
-    private string $fileFolder;
+    /** @var string */
+    private string $fileFolderPath;
+
+    /** @var Filesystem  */
+    private Filesystem $filesystem;
 
     /**
+     * @param Filesystem $filesystem
      * @param array $params
-     * @param string $fileFolder
+     * @param string $fileFolderPath
      */
-    public function __construct(array $params = [], string $fileFolder = '')
-    {
+    public function __construct(
+        Filesystem $filesystem,
+        array $params = [],
+        string $fileFolderPath = ''
+    ) {
         $this->params = $params;
-        $this->fileFolder = $fileFolder;
+        $this->fileFolderPath = $fileFolderPath;
+        $this->filesystem = $filesystem;
     }
 
-    public function getRecords(string $csv): iterable
+    public function getRecords(string $filePath): iterable
     {
-        $reader = $this->mapHeader(Reader::createFromString($csv));
+        $reader = $this->mapHeader(Reader::createFromPath($filePath));
         $reader
             ->setDelimiter(',')
             ->setHeaderOffset(0);
@@ -59,13 +68,23 @@ class CsvReader
         return $this->reader;
     }
 
-    public function saveCsv(string $newCsvString)
+    public function saveCsv(string $newCsvString): string
     {
         $csv = Reader::createFromString($newCsvString)
             ->setHeaderOffset(0);
 
-        $file = Writer::createFromPath($this->fileFolder . '/enriched_list.csv', 'w+');
+        $this->filesystem->mkdir($this->fileFolderPath);
+        $path = $this->fileFolderPath . '/enriched_list.csv';
+
+        $file = Writer::createFromPath($path, 'w+');
         $file->insertOne($csv->getHeader());
         $file->insertAll($csv->getRecords());
+
+        return $path;
+    }
+
+    public function delete(string $newFilePath)
+    {
+        $this->filesystem->remove($newFilePath);
     }
 }

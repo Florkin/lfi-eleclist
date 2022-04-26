@@ -27,18 +27,15 @@ restart-clear:
 	docker-compose up --build -d
 
 database:
-	docker exec $(USER) $(SYMFO) bin/console doctrine:database:create
-	docker exec $(USER) $(SYMFO) bin/console doctrine:migration:migrate
+	docker exec -it $(SYMFO) bin/console doctrine:database:create
+	docker exec -it $(SYMFO) bin/console doctrine:migration:migrate
 
-bash:
-	docker exec $(USER) $(SYMFO) bash
+sh:
+	docker exec -it $(SYMFO) sh
 
 vendor: composer.lock
 	rm -rf ./vendor
 	symfony composer install --no-progress --prefer-dist --optimize-autoloader
 
 cc:
-	docker-compose exec $(USER) $(SYMFO) bin/console cache:clear
-
-file-folder-permissions:
-	chmod 777 public/files/
+	docker-compose exec -it $(SYMFO) bin/console cache:clear

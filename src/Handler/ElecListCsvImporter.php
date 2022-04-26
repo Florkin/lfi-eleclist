@@ -14,7 +14,7 @@ use App\Repository\ElectorRepository;
 use App\Service\CsvReader;
 use Doctrine\ORM\EntityManagerInterface;
 
-class ElecListCsvRecordHandler
+class ElecListCsvImporter
 {
     /** @var EntityManagerInterface */
     private EntityManagerInterface $entityManager;
@@ -46,7 +46,7 @@ class ElecListCsvRecordHandler
         $this->params = $params;
     }
 
-    public function importFile(String $filePath)
+    public function importFile(String $filePath): bool
     {
         $records = $this->csvReader->getRecords($filePath);
         $count = $this->csvReader->getReader()->count();
@@ -64,6 +64,8 @@ class ElecListCsvRecordHandler
 
             $counter += 1;
         };
+
+        return true;
     }
 
     public function clear()

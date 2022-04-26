@@ -26,6 +26,7 @@ Il est aussi possible de faire des commits multilignes :
 Ne pas oublier de referencer l'issue dans la Pull Request
 
 ## Setup Docker (linux) :
+- `export UID=$(id -u) && export GID=$(id -g)` for permissions issues
 - `make start` (equivalent to `make build` then `make up`) Build & up l'image docker
 - `make vendor` Installe les vendor
 - `make database` Crée la base de donnée et execute les migrations

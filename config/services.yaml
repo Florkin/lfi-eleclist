@@ -4,7 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    csv_files_folder: '%kernel.project_dir%/public/files'
+    temp_file_folder: '%kernel.project_dir%/public/temp'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -27,10 +27,10 @@ services:
 
     App\Service\CsvReader:
         arguments:
-            $fileFolder: '%csv_files_folder%'
+            $fileFolderPath: '%temp_file_folder%'
             $params: '%csv_header_mapping%'
 
-    App\Handler\ElecListCsvRecordHandler:
+    App\Handler\ElecListCsvImporter:
         arguments:
             $params: '%csv_header_mapping%'
 

@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Handler\ElecListCsvRecordHandler;
+use App\Handler\ElecListCsvImporter;
 use App\Handler\AddressRequestHandler;
 use App\Service\CsvReader;
 use Symfony\Component\Console\Command\Command;
@@ -21,21 +21,21 @@ class EleclistImportCsvCommand extends Command
     /** @var CsvReader */
     private CsvReader $csvReader;
 
-    /** @var ElecListCsvRecordHandler */
-    private ElecListCsvRecordHandler $recordHandler;
+    /** @var ElecListCsvImporter */
+    private ElecListCsvImporter $recordHandler;
 
     /** @var AddressRequestHandler */
     private AddressRequestHandler $addressRequest;
 
     /**
      * @param CsvReader $csvReader
-     * @param ElecListCsvRecordHandler $recordHandler
+     * @param ElecListCsvImporter $recordHandler
      * @param AddressRequestHandler $addressRequest
      * @param string|null $name
      */
     public function __construct(
         CsvReader $csvReader,
-        ElecListCsvRecordHandler $recordHandler,
+        ElecListCsvImporter $recordHandler,
         AddressRequestHandler $addressRequest,
         string $name = null
     ) {
@@ -68,8 +68,10 @@ class EleclistImportCsvCommand extends Command
         }
         $newCsvString = $this->addressRequest->request($filePath);
         $newFilePath = $this->csvReader->saveCsv($newCsvString);
-//        dd($newFilePath);
-//        $this->recordHandler->importFile($newFilePath);
+
+        if ($this->recordHandler->importFile($newFilePath)) {
+            $this->csvReader->delete($newFilePath);
+        }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
