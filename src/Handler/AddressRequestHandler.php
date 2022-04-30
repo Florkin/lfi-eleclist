@@ -38,9 +38,10 @@ class AddressRequestHandler
         $this->csvMappingParams = $csvMappingParams;
     }
 
-    public function request($csv): string
+    public function request(string $csv, string $delimiter = ','): string
     {
         $dataArray['data'] = DataPart::fromPath($csv);
+        $dataArray['delimiter'] = $delimiter;
         $dataArray = $this->addColumnsToSend($dataArray);
         $dataArray = $this->addColumnsToReceive($dataArray);
 

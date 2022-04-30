@@ -8,6 +8,8 @@
 
 namespace App\Service;
 
+use League\Csv\CharsetConverter;
+use League\Csv\Exception;
 use League\Csv\Reader;
 use League\Csv\Writer;
 use Symfony\Component\Filesystem\Filesystem;
@@ -23,7 +25,7 @@ class CsvReader
     /** @var string */
     private string $fileFolderPath;
 
-    /** @var Filesystem  */
+    /** @var Filesystem */
     private Filesystem $filesystem;
 
     /**
@@ -41,37 +43,42 @@ class CsvReader
         $this->filesystem = $filesystem;
     }
 
-    public function getRecords(string $filePath): iterable
+    public function mapHeader(string $delimiter = ',', int $offset = 0)
     {
-        $reader = $this->mapHeader(Reader::createFromPath($filePath));
-        $reader
-            ->setDelimiter(',')
-            ->setHeaderOffset(0);
+        if (!isset($this->reader)) {
+            throw new Exception('Reader is not created, please use CsvReader::createReader()');
+        }
 
-        $this->reader = $reader;
-
-        return $this->reader->getRecords();
-    }
-
-    private function mapHeader(Reader $file)
-    {
-        $csvStr = $file->toString();
+        $csvStr = $this->reader->toString();
         $headers = $this->params['column_headers'];
 
         $mapped = str_replace($headers, array_keys($headers), $csvStr);
 
-        return Reader::createFromString($mapped);
+        $this->reader = Reader::createFromString($mapped)
+            ->setHeaderOffset($offset)
+            ->setDelimiter($delimiter);
     }
 
-    public function getReader()
+    public function getReader(): Reader
     {
         return $this->reader;
     }
 
-    public function saveCsv(string $newCsvString): string
+    public function createReader(string $filePath = '', string $delimiter = ',', int $offset = 0): Reader
+    {
+        $reader = Reader::createFromPath($filePath)
+            ->setDelimiter($delimiter)
+            ->setHeaderOffset($offset);
+
+        $this->reader = $reader;
+        return $this->reader;
+    }
+
+    public function saveCsv(string $newCsvString, string $delimiter = ',', int $offset = 0): string
     {
         $csv = Reader::createFromString($newCsvString)
-            ->setHeaderOffset(0);
+            ->setHeaderOffset($offset)
+            ->setDelimiter($delimiter);
 
         $this->filesystem->mkdir($this->fileFolderPath);
         $path = $this->fileFolderPath . '/enriched_list.csv';

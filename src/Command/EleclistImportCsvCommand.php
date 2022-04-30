@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Exception\CsvFormatException;
 use App\Handler\ElecListCsvImporter;
 use App\Handler\AddressRequestHandler;
 use App\Service\CsvReader;
@@ -55,25 +56,43 @@ class EleclistImportCsvCommand extends Command
                 'c',
                 InputOption::VALUE_NONE,
                 'Clear all before import'
+            )
+            ->addOption(
+                'delimiter',
+                'd',
+                InputOption::VALUE_OPTIONAL,
+                'Csv delimiter',
+                ','
             );
     }
 
+    /**
+     * @throws CsvFormatException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
+        $delimiter = $input->getOption('delimiter');
 
         if ($input->getOption('clear')) {
+            $io->info('Clearing database...');
             $this->recordHandler->clear();
         }
-        $newCsvString = $this->addressRequest->request($filePath);
-        $newFilePath = $this->csvReader->saveCsv($newCsvString);
 
+        $io->info('Requesting official address data from https://adresse.data.gouv.fr/api-doc/adresse...');
+        $newCsvString = $this->addressRequest->request($filePath, $delimiter);
+
+        $io->info('Saving new CSV...');
+        $newFilePath = $this->csvReader->saveCsv($newCsvString, $delimiter);
+
+        $io->info('Importing...');
         if ($this->recordHandler->importFile($newFilePath)) {
+            $io->info('Deleting temporary csv...');
             $this->csvReader->delete($newFilePath);
         }
 
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+        $io->success('CSV is successfully imported !');
 
         return Command::SUCCESS;
     }
