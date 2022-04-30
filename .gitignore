@@ -8,6 +8,7 @@
 /public/temp/
 /var/
 /vendor/
+/php/
 ###< symfony/framework-bundle ###
 files/
 
