@@ -10,9 +10,11 @@ namespace App\Handler;
 
 use App\Entity\Address;
 use App\Entity\Elector;
+use App\Exception\CsvFormatException;
 use App\Repository\ElectorRepository;
 use App\Service\CsvReader;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 
 class ElecListCsvImporter
 {
@@ -25,7 +27,7 @@ class ElecListCsvImporter
     /** @var CsvReader */
     private CsvReader $csvReader;
 
-    /** @var array  */
+    /** @var array */
     private array $params;
 
     /**
@@ -46,24 +48,37 @@ class ElecListCsvImporter
         $this->params = $params;
     }
 
-    public function importFile(String $filePath): bool
+    public function importFile(string $filePath, string $delimiter = ',', int $offset = 0): bool
     {
-        $records = $this->csvReader->getRecords($filePath);
-        $count = $this->csvReader->getReader()->count();
+        $this->csvReader->createReader($filePath, $delimiter, $offset);
+        $this->csvReader->mapHeader($delimiter, $offset);
+        $reader = $this->csvReader->getReader();
+        $records = $reader->getRecords();
 
+        $count = $reader->count();
         $counter = 0;
 
-        foreach ($records as $key => $record) {
-            $this->saveRecord($record);
+        try {
+            foreach ($records as $key => $record) {
+                $this->saveRecord($record);
 
-            if ($counter === 1000 || $key === $count) {
-                $this->entityManager->flush();
-                $counter = 0;
-                continue;
-            }
+                if ($counter === 1000 || $key === $count) {
+                    $this->entityManager->flush();
+                    $counter = 0;
+                    continue;
+                }
 
-            $counter += 1;
-        };
+                $counter += 1;
+            };
+        } catch (Exception $e) {
+            $message =
+                'There was an error importing CSV file. Check delimiter '
+                . 'and change it if necessary (--delimiter=";"). '
+                . 'If it doesn\'t work, try open it and save it as CSV '
+                . 'with spreadsheet program like Excel or LibreOffice. '
+                . 'You can check CSV file with https://www.toolkitbay.com/tkb/tool/csv-validator';
+            throw new CsvFormatException($message);
+        }
 
         return true;
     }
@@ -104,7 +119,7 @@ class ElecListCsvImporter
         $address
             ->setAdd1(trim($record['add1']))
             ->setAdd2(trim($record['add2']))
-            ->setStreet(trim($record['result_name']?? $record['street']))
+            ->setStreet(trim($record['result_name'] ?? $record['street']))
             ->setCity(trim($record['result_city'] ?? $record['city']))
             ->setPostcode(trim($record['result_postcode'] ?? $record['postcode']))
             ->setNumber(trim($record['result_housenumber'] ?? $record['house_number']));
