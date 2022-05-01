@@ -3,7 +3,7 @@ version: "3.8"
 services:
 
     mariadb-service:
-        image: mariadb:latest
+        image: mariadb:10.8.2
         container_name: mariadb-eleclist-container
         restart: on-failure
         ports:

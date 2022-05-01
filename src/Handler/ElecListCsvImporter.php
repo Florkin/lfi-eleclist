@@ -62,7 +62,7 @@ class ElecListCsvImporter
             foreach ($records as $key => $record) {
                 $this->saveRecord($record);
 
-                if ($counter === 1000 || $key === $count) {
+                if ($counter === 10000 || $key === $count) {
                     $this->entityManager->flush();
                     $counter = 0;
                     continue;
