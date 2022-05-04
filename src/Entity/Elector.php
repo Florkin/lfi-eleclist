@@ -42,6 +42,12 @@ class Elector
      */
     private $address;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=GroupedAddress::class, inversedBy="electors")
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     */
+    private $groupedAddress;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -103,6 +109,18 @@ class Elector
     public function setAddress(?Address $address): self
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    public function getGroupedAddress(): ?GroupedAddress
+    {
+        return $this->groupedAddress;
+    }
+
+    public function setGroupedAddress(?GroupedAddress $groupedAddress): self
+    {
+        $this->groupedAddress = $groupedAddress;
 
         return $this;
     }

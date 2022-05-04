@@ -44,4 +44,16 @@ class ElectorRepository extends ServiceEntityRepository
             $this->_em->flush();
         }
     }
+
+    public function findByAddressData(array $addressData)
+    {
+        $queryBuilder = $this->createQueryBuilder('e')
+            ->join('e.address', 'a');
+
+        foreach ($addressData as $key => $data) {
+            $queryBuilder->andWhere("a." . $key . " = '" . $data . "'");
+        }
+
+        return $queryBuilder->getQuery();
+    }
 }
