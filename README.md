@@ -34,8 +34,11 @@ Ne pas oublier de referencer l'issue dans la Pull Request
 - Connect phpmyadmin : `http://localhost:8080/` - `root / emptyPassword`
 
 ## Importer CSV :
-- Placer le fichier dans /files
-- Executer `make file-folder-permissions`
+- Placer le fichier dans /files (ou ailleurs)
 - Executer `bin/console eleclist:import-csv files/filename.csv`
 - Pour effacer les données déjà présentes, ajouter l'argument "--clear" ou "-c"  
   exemple : `bin/console eleclist:import-csv files/filename.csv --clear`
+- Si le delimiteur n'est pas ",", ajouter --delimiter=";"
+
+## Grouper les addresses
+- Executer `bin/console eleclist:find-groups` va générer des addresses groupées par number/street/city et y associer tous les électeurs habitant à cette addresse.
