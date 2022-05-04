@@ -1,7 +1,7 @@
 <?php
 
-/**370890 437764 370881 437530 66874 66649
- * ElecListCsvRecordHandler.php
+/**
+ * CsvImportHandler
  *
  * @author    Tristan Florin <tristan.florin@smile.fr>
  * @copyright 2022 Smile
@@ -12,14 +12,12 @@ namespace App\Handler;
 use App\Entity\Address;
 use App\Entity\Elector;
 use App\Exception\CsvFormatException;
-use App\Repository\AddressRepository;
 use App\Repository\ElectorRepository;
-use App\Service\CsvReader;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class ElecListCsvImporter
+class CsvImportHandler
 {
     /** @var EntityManagerInterface */
     private EntityManagerInterface $entityManager;
@@ -27,58 +25,56 @@ class ElecListCsvImporter
     /** @var ElectorRepository */
     private ElectorRepository $electorRepository;
 
-    /** @var AddressRepository */
-    private AddressRepository $addressRepository;
-
-    /** @var CsvReader */
-    private CsvReader $csvReader;
+    /** @var CsvHandler */
+    private CsvHandler $csvHandler;
 
     /** @var array */
     private array $params;
 
+    /** @var array  */
+    private array $failedRecords = [];
+
     /**
      * @param EntityManagerInterface $entityManager
      * @param ElectorRepository $electorRepository
-     * @param CsvReader $csvReader
+     * @param CsvHandler $csvHandler
      * @param array $params
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         ElectorRepository $electorRepository,
-        AddressRepository $addressRepository,
-        CsvReader $csvReader,
+        CsvHandler $csvHandler,
         array $params
     ) {
         $this->entityManager = $entityManager;
         $this->electorRepository = $electorRepository;
-        $this->csvReader = $csvReader;
+        $this->csvHandler = $csvHandler;
         $this->params = $params;
-        $this->addressRepository = $addressRepository;
     }
 
     public function importFile(string $filePath, SymfonyStyle $io, string $delimiter = ',', int $offset = 0): array
     {
-        $this->csvReader->createReader($filePath, $delimiter, $offset);
-        $this->csvReader->mapHeader($delimiter, $offset);
-        $reader = $this->csvReader->getReader();
+        $this->csvHandler->createReader($filePath, $delimiter, $offset);
+        $this->csvHandler->mapHeader($delimiter, $offset);
+        $reader = $this->csvHandler->getReader();
         $records = $reader->getRecords();
 
-        $count = $reader->count();
         $counter = 0;
         $successCounter = 0;
         $failCounter = 0;
 
-        $progressBar = $io->createProgressBar($count);
+        $progressBar = $io->createProgressBar($reader->count());
 
         try {
-            foreach ($records as $key => $record) {
+            foreach ($records as $record) {
                 if ($this->saveRecord($record)) {
                     $successCounter += 1;
                 } else {
                     $failCounter += 1;
+                    $this->addRecordToFails($record);
                 }
 
-                if ($counter === 10000 || $key === $count - 1) {
+                if ($counter === 1000) {
                     $this->entityManager->flush();
                     $counter = 0;
                     continue;
@@ -86,7 +82,10 @@ class ElecListCsvImporter
 
                 $counter += 1;
                 $progressBar->advance();
-            };
+            }
+
+            $this->entityManager->flush();
+
         } catch (Exception $e) {
             $message =
                 'There was an error importing CSV file. Check delimiter '
@@ -108,26 +107,29 @@ class ElecListCsvImporter
         $io->section('clearing electors...');
         $progressBar = $io->createProgressBar(count($electors));
 
+        $counter = 0;
         foreach ($electors as $elector) {
             $this->entityManager->remove($elector);
             $progressBar->advance();
+
+            if ($counter === 1000) {
+                $this->entityManager->flush();
+                $counter = 0;
+                continue;
+            }
+
+            $counter += 1;
         }
 
         $this->entityManager->flush();
+
         $progressBar->finish();
         $io->newLine(3);
+    }
 
-        $addresses = $this->addressRepository->findAll();
-        $io->section('clearing addresses...');
-        $progressBar = $io->createProgressBar(count($addresses));
-        foreach ($addresses as $address) {
-            $this->entityManager->remove($address);
-            $progressBar->advance();
-        }
-
-        $this->entityManager->flush();
-        $progressBar->finish();
-        $io->newLine(3);
+    public function getFailedRecords(): array
+    {
+        return $this->failedRecords;
     }
 
     private function saveRecord(array $record): bool
@@ -164,9 +166,13 @@ class ElecListCsvImporter
 
     private function createAddress(array $record): ?Address
     {
-        if (!$record['result_name'] || !$record['result_housenumber'] || !$record['result_city']) {
+        if (!$record['result_name']
+            || !$record['result_housenumber'] && !$record['house_number']
+            || !$record['result_city']) {
             return null;
         }
+
+        $houseNumber = $this->formatHouseNumber($record);
 
         $address = new Address();
         $address
@@ -175,7 +181,7 @@ class ElecListCsvImporter
             ->setStreet(trim($record['result_name']))
             ->setCity(trim($record['result_city']))
             ->setPostcode(trim($record['result_postcode']))
-            ->setNumber(trim($record['result_housenumber']));
+            ->setNumber($houseNumber);
 
         return $address;
     }
@@ -187,5 +193,29 @@ class ElecListCsvImporter
         }
 
         return $record['birthname'];
+    }
+
+    private function addRecordToFails($record)
+    {
+        $this->failedRecords[] = $record;
+    }
+
+    private function formatHouseNumber(array $record)
+    {
+        if ($record['result_housenumber']) {
+            return $record['result_housenumber'];
+        }
+
+        if (str_contains(strtoupper($record['house_number']), 'BIS')
+            || str_contains(strtoupper($record['house_number']), 'B')) {
+            return (int) $record['house_number'] . 'b';
+        }
+
+        if (str_contains(strtoupper($record['house_number']), 'TER')
+            || str_contains(strtoupper($record['house_number']), 'T')) {
+            return (int) $record['house_number'] . 't';
+        }
+
+        return '';
     }
 }

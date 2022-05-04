@@ -4,8 +4,6 @@ parameters:
     fields_to_send:
       - house_number
       - street
-      - add1
-      - add2
       - postcode
       - city
 
