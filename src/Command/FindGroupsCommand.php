@@ -54,15 +54,14 @@ class FindGroupsCommand extends Command
         $io->section('Grouping addresses...');
         $groupedAddresses = $this->addressRepository->getGroupedAddresses()->getResult();
         $counter = 0;
-        $count = count($groupedAddresses);
         $failCount = 0;
         $total = 0;
         $electorsCount = 0;
         $totalElectorsCount = count($this->electorRepository->findAll());
 
-        $progress = $io->createProgressBar($count);
+        $progress = $io->createProgressBar(count($groupedAddresses));
 
-        foreach ($groupedAddresses as $key => $data) {
+        foreach ($groupedAddresses as $data) {
             $total += 1;
             if (!$this->addressGroupHandler->checkData($data)) {
                 $failCount += 1;
@@ -74,7 +73,7 @@ class FindGroupsCommand extends Command
             $this->entityManager->persist($address);
             $progress->advance();
 
-            if ($counter === 50 || $key === $count - 1) {
+            if ($counter === 50) {
                 $this->entityManager->flush();
                 $counter = 0;
                 continue;
@@ -82,6 +81,8 @@ class FindGroupsCommand extends Command
 
             $counter += 1;
         }
+
+        $this->entityManager->flush();
 
         $electorFails = $totalElectorsCount - $electorsCount;
 
@@ -106,9 +107,18 @@ class FindGroupsCommand extends Command
         $toDelete = $this->groupedAddressRepository->findAll();
         $deleteProgress = $io->createProgressBar(count($toDelete));
 
+        $counter = 0;
         foreach ($toDelete as $address) {
             $this->entityManager->remove($address);
             $deleteProgress->advance(1);
+
+            if ($counter === 500) {
+                $this->entityManager->flush();
+                $counter = 0;
+                continue;
+            }
+
+            $counter += 1;
         }
 
         $this->entityManager->flush();

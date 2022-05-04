@@ -1,20 +1,21 @@
 <?php
+
 /**
- * CsvReader.php
+ * CsvHandler
  *
  * @author    Tristan Florin <tristan.florin@smile.fr>
  * @copyright 2022 Smile
  */
 
-namespace App\Service;
+namespace App\Handler;
 
-use League\Csv\CharsetConverter;
+use ArrayIterator;
 use League\Csv\Exception;
 use League\Csv\Reader;
 use League\Csv\Writer;
 use Symfony\Component\Filesystem\Filesystem;
 
-class CsvReader
+class CsvHandler
 {
     /** @var array */
     private array $params;
@@ -22,24 +23,19 @@ class CsvReader
     /** @var Reader */
     private Reader $reader;
 
-    /** @var string */
-    private string $fileFolderPath;
+    /** @var array */
+    private array $csvPaths;
 
     /** @var Filesystem */
     private Filesystem $filesystem;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param array $params
-     * @param string $fileFolderPath
-     */
     public function __construct(
         Filesystem $filesystem,
         array $params = [],
-        string $fileFolderPath = ''
+        array $csvPaths = []
     ) {
         $this->params = $params;
-        $this->fileFolderPath = $fileFolderPath;
+        $this->csvPaths = $csvPaths;
         $this->filesystem = $filesystem;
     }
 
@@ -80,8 +76,8 @@ class CsvReader
             ->setHeaderOffset($offset)
             ->setDelimiter($delimiter);
 
-        $this->filesystem->mkdir($this->fileFolderPath);
-        $path = $this->fileFolderPath . '/enriched_list.csv';
+        $this->filesystem->mkdir($this->csvPaths['temp_file_folder']);
+        $path = $this->csvPaths['temp_file_folder'] . '/enriched_list.csv';
 
         $file = Writer::createFromPath($path, 'w+');
         $file->insertOne($csv->getHeader());
@@ -90,8 +86,31 @@ class CsvReader
         return $path;
     }
 
-    public function delete(string $newFilePath)
+    public function archive(string $filePath)
     {
-        $this->filesystem->remove($newFilePath);
+        $this->filesystem->mkdir($this->csvPaths['archives']);
+        $this->filesystem->rename(
+            $filePath,
+            $this->csvPaths['archives'] . '/' . $this->generateDatedFilename('imported'),
+            'w+'
+        );
+    }
+
+    public function archiveFailedFromArray(array $records)
+    {
+        $this->filesystem->mkdir($this->csvPaths['archives_fails']);
+        $writer = Writer::createFromPath(
+            $this->csvPaths['archives_fails'] . '/' . $this->generateDatedFilename('fail'),
+            'w+'
+        );
+
+        $writer->insertOne(array_keys($records[0]));
+        $writer->insertAll(new ArrayIterator($records));
+    }
+
+    private function generateDatedFilename(string $prefix)
+    {
+        $datetime = new \DateTime('now');
+        return $prefix . '_' . $datetime->format('d.m.Y_h:m:s') . '.csv';
     }
 }
