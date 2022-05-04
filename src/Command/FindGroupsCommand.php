@@ -89,12 +89,14 @@ class FindGroupsCommand extends Command
         $io->newLine(3);
         $io->success("Address grouping successful. ");
         $io->newLine();
-        $io->info("Grouped addresses: $total success and $failCount fails (incomplete data)");
+        $io->info("Grouped addresses: $total success and $failCount fails");
         $io->newLine();
-        $io->warning(
-            "$electorFails electors on $totalElectorsCount are not grouped to any 
-            address due to incomplete address data."
-        );
+        if ($totalElectorsCount) {
+            $io->warning(
+                "$electorFails electors on $totalElectorsCount are not grouped to any "
+                . "address due to incomplete address data."
+            );
+        }
 
         return Command::SUCCESS;
     }

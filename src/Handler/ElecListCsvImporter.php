@@ -1,5 +1,6 @@
 <?php
-/**
+
+/**370890 437764 370881 437530 66874 66649
  * ElecListCsvRecordHandler.php
  *
  * @author    Tristan Florin <tristan.florin@smile.fr>
@@ -77,7 +78,7 @@ class ElecListCsvImporter
                     $failCounter += 1;
                 }
 
-                if ($counter === 10000 || $key === $count) {
+                if ($counter === 10000 || $key === $count - 1) {
                     $this->entityManager->flush();
                     $counter = 0;
                     continue;
