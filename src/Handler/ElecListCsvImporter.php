@@ -11,10 +11,12 @@ namespace App\Handler;
 use App\Entity\Address;
 use App\Entity\Elector;
 use App\Exception\CsvFormatException;
+use App\Repository\AddressRepository;
 use App\Repository\ElectorRepository;
 use App\Service\CsvReader;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ElecListCsvImporter
 {
@@ -23,6 +25,9 @@ class ElecListCsvImporter
 
     /** @var ElectorRepository */
     private ElectorRepository $electorRepository;
+
+    /** @var AddressRepository */
+    private AddressRepository $addressRepository;
 
     /** @var CsvReader */
     private CsvReader $csvReader;
@@ -39,6 +44,7 @@ class ElecListCsvImporter
     public function __construct(
         EntityManagerInterface $entityManager,
         ElectorRepository $electorRepository,
+        AddressRepository $addressRepository,
         CsvReader $csvReader,
         array $params
     ) {
@@ -46,9 +52,10 @@ class ElecListCsvImporter
         $this->electorRepository = $electorRepository;
         $this->csvReader = $csvReader;
         $this->params = $params;
+        $this->addressRepository = $addressRepository;
     }
 
-    public function importFile(string $filePath, string $delimiter = ',', int $offset = 0): bool
+    public function importFile(string $filePath, SymfonyStyle $io, string $delimiter = ',', int $offset = 0): array
     {
         $this->csvReader->createReader($filePath, $delimiter, $offset);
         $this->csvReader->mapHeader($delimiter, $offset);
@@ -57,10 +64,18 @@ class ElecListCsvImporter
 
         $count = $reader->count();
         $counter = 0;
+        $successCounter = 0;
+        $failCounter = 0;
+
+        $progressBar = $io->createProgressBar($count);
 
         try {
             foreach ($records as $key => $record) {
-                $this->saveRecord($record);
+                if ($this->saveRecord($record)) {
+                    $successCounter += 1;
+                } else {
+                    $failCounter += 1;
+                }
 
                 if ($counter === 10000 || $key === $count) {
                     $this->entityManager->flush();
@@ -69,6 +84,7 @@ class ElecListCsvImporter
                 }
 
                 $counter += 1;
+                $progressBar->advance();
             };
         } catch (Exception $e) {
             $message =
@@ -80,27 +96,59 @@ class ElecListCsvImporter
             throw new CsvFormatException($message);
         }
 
-        return true;
+        $progressBar->finish();
+        $io->newLine(3);
+        return ['success' => $successCounter, 'error' => $failCounter];
     }
 
-    public function clear()
+    public function clear(SymfonyStyle $io)
     {
-        foreach ($this->electorRepository->findAll() as $elector) {
+        $electors = $this->electorRepository->findAll();
+        $io->section('clearing electors...');
+        $progressBar = $io->createProgressBar(count($electors));
+
+        foreach ($electors as $elector) {
             $this->entityManager->remove($elector);
+            $progressBar->advance();
         }
 
         $this->entityManager->flush();
+        $progressBar->finish();
+        $io->newLine(3);
+
+        $addresses = $this->addressRepository->findAll();
+        $io->section('clearing addresses...');
+        $progressBar = $io->createProgressBar(count($addresses));
+        foreach ($addresses as $address) {
+            $this->entityManager->remove($address);
+            $progressBar->advance();
+        }
+
+        $this->entityManager->flush();
+        $progressBar->finish();
+        $io->newLine(3);
     }
 
-    private function saveRecord(array $record)
+    private function saveRecord(array $record): bool
     {
         $elector = $this->createElector($record);
-        $elector->setAddress($this->createAddress($record));
+        $address = $this->createAddress($record);
+        if (!$elector || !$address) {
+            return false;
+        }
+
+        $elector->setAddress($address);
         $this->entityManager->persist($elector);
+
+        return true;
     }
 
-    private function createElector(array $record)
+    private function createElector(array $record): ?Elector
     {
+        if (!$record['vote_office']) {
+            return null;
+        }
+
         $lastName = $this->getLastName($record);
 
         $elector = new Elector();
@@ -113,16 +161,20 @@ class ElecListCsvImporter
         return $elector;
     }
 
-    private function createAddress(array $record)
+    private function createAddress(array $record): ?Address
     {
+        if (!$record['result_name'] || !$record['result_housenumber'] || !$record['result_city']) {
+            return null;
+        }
+
         $address = new Address();
         $address
             ->setAdd1(trim($record['add1']))
             ->setAdd2(trim($record['add2']))
-            ->setStreet(trim($record['result_name'] ?? $record['street']))
-            ->setCity(trim($record['result_city'] ?? $record['city']))
-            ->setPostcode(trim($record['result_postcode'] ?? $record['postcode']))
-            ->setNumber(trim($record['result_housenumber'] ?? $record['house_number']));
+            ->setStreet(trim($record['result_name']))
+            ->setCity(trim($record['result_city']))
+            ->setPostcode(trim($record['result_postcode']))
+            ->setNumber(trim($record['result_housenumber']));
 
         return $address;
     }

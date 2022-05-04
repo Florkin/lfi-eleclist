@@ -77,22 +77,35 @@ class EleclistImportCsvCommand extends Command
 
         if ($input->getOption('clear')) {
             $io->info('Clearing database...');
-            $this->recordHandler->clear();
+            $this->recordHandler->clear($io);
         }
 
-        $io->info('Requesting official address data from https://adresse.data.gouv.fr/api-doc/adresse...');
+        $io->section(
+            'Requesting official address data from https://adresse.data.gouv.fr/api-doc/adresse, '
+             . 'this can be very long (More than 10 minutes for 50k lines)'
+        );
         $newCsvString = $this->addressRequest->request($filePath, $delimiter);
+        $io->info("Response from API finally received! Thanks for your patience.");
+        $io->newLine();
 
         $io->info('Saving new CSV...');
         $newFilePath = $this->csvReader->saveCsv($newCsvString, $delimiter);
+        $io->newLine();
 
-        $io->info('Importing...');
-        if ($this->recordHandler->importFile($newFilePath)) {
-            $io->info('Deleting temporary csv...');
-            $this->csvReader->delete($newFilePath);
-        }
+        $io->section('Data import');
+        $result = $this->recordHandler->importFile($newFilePath, $io);
+
+        $io->info('Deleting temporary csv...');
+        $this->csvReader->delete($newFilePath);
 
         $io->success('CSV is successfully imported !');
+
+        $io->section("Resultat de l'import");
+        $successLines = $result['success'];
+        $failedLines = $result['error'];
+        $io->info("$successLines electors imported");
+        $io->info("$failedLines electors failed to import, missing essential data");
+        $io->info(round(($failedLines * 100) / ($successLines + $failedLines), 2) . "% fails");
 
         return Command::SUCCESS;
     }
