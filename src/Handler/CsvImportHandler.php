@@ -12,7 +12,9 @@ namespace App\Handler;
 use App\Entity\Address;
 use App\Entity\Elector;
 use App\Exception\CsvFormatException;
+use App\Repository\AddressRepository;
 use App\Repository\ElectorRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -29,30 +31,40 @@ class CsvImportHandler
     private CsvHandler $csvHandler;
 
     /** @var array */
-    private array $params;
+    private array $config;
 
-    /** @var array  */
+    /** @var array */
     private array $failedRecords = [];
+
+    /** @var array */
+    private array $apptOccurence = [];
+
+    /** @var AddressRepository */
+    private AddressRepository $addressRepository;
+
+    /** @var SymfonyStyle  */
+    private SymfonyStyle $io;
 
     /**
      * @param EntityManagerInterface $entityManager
      * @param ElectorRepository $electorRepository
      * @param CsvHandler $csvHandler
-     * @param array $params
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         ElectorRepository $electorRepository,
         CsvHandler $csvHandler,
-        array $params
+        AddressRepository $addressRepository,
+        array $config
     ) {
         $this->entityManager = $entityManager;
         $this->electorRepository = $electorRepository;
         $this->csvHandler = $csvHandler;
-        $this->params = $params;
+        $this->config = $config;
+        $this->addressRepository = $addressRepository;
     }
 
-    public function importFile(string $filePath, SymfonyStyle $io, string $delimiter = ',', int $offset = 0): array
+    public function importFile(string $filePath, string $delimiter = ',', int $offset = 0): array
     {
         $this->csvHandler->createReader($filePath, $delimiter, $offset);
         $this->csvHandler->mapHeader($delimiter, $offset);
@@ -63,7 +75,7 @@ class CsvImportHandler
         $successCounter = 0;
         $failCounter = 0;
 
-        $progressBar = $io->createProgressBar($reader->count());
+        $progressBar = $this->io->createProgressBar($reader->count());
 
         try {
             foreach ($records as $record) {
@@ -83,29 +95,24 @@ class CsvImportHandler
                 $counter += 1;
                 $progressBar->advance();
             }
-
             $this->entityManager->flush();
 
+            $progressBar->finish();
+            $this->io->newLine(3);
+            $this->setApptCounts();
+
         } catch (Exception $e) {
-            $message =
-                'There was an error importing CSV file. Check delimiter '
-                . 'and change it if necessary (--delimiter=";"). '
-                . 'If it doesn\'t work, try open it and save it as CSV '
-                . 'with spreadsheet program like Excel or LibreOffice. '
-                . 'You can check CSV file with https://www.toolkitbay.com/tkb/tool/csv-validator';
-            throw new CsvFormatException($message);
+            throw new CsvFormatException($e->getMessage());
         }
 
-        $progressBar->finish();
-        $io->newLine(3);
         return ['success' => $successCounter, 'error' => $failCounter];
     }
 
-    public function clear(SymfonyStyle $io)
+    public function clear()
     {
         $electors = $this->electorRepository->findAll();
-        $io->section('clearing electors...');
-        $progressBar = $io->createProgressBar(count($electors));
+        $this->io->section('clearing electors...');
+        $progressBar = $this->io->createProgressBar(count($electors));
 
         $counter = 0;
         foreach ($electors as $elector) {
@@ -124,7 +131,7 @@ class CsvImportHandler
         $this->entityManager->flush();
 
         $progressBar->finish();
-        $io->newLine(3);
+        $this->io->newLine(3);
     }
 
     public function getFailedRecords(): array
@@ -143,9 +150,17 @@ class CsvImportHandler
         $elector->setAddress($address);
         $this->entityManager->persist($elector);
 
+        $this->apptOccurence[] = trim($address->getNumber()) . '_'
+            . trim($address->getStreet()) . '_'
+            . trim($address->getCity()) . '|'
+            . trim($record['add1']);
+
         return true;
     }
 
+    /**
+     * @throws Exception
+     */
     private function createElector(array $record): ?Elector
     {
         if (!$record['vote_office']) {
@@ -153,13 +168,17 @@ class CsvImportHandler
         }
 
         $lastName = $this->getLastName($record);
+        $birthdate = isset($record['birthdate']) && $record['birthdate']
+            ? DateTime::createFromFormat('d/m/Y', $record['birthdate'])
+            : null;
 
         $elector = new Elector();
         $elector
             ->setFirstname(trim($record['firstname']))
             ->setLastname(trim($lastName))
             ->setBirthname(trim($record['birthname']))
-            ->setVoteOffice(trim($record['vote_office']));
+            ->setVoteOffice(trim($record['vote_office']))
+            ->setBirthdate($birthdate);
 
         return $elector;
     }
@@ -209,23 +228,63 @@ class CsvImportHandler
             return $record['result_housenumber'];
         }
 
+        if (isset($this->config['only_reliable_data']) && $this->config['only_reliable_data']) {
+            return null;
+        }
+
         if (
-            !preg_match("/[a-zA-Z]/i", $record['house_number'])
-            && preg_match("/[0-9]/i", $record['house_number'])
+            !preg_match("/[a-zA-Z]/i", trim($record['house_number']))
+            && preg_match("/[0-9]/i", trim($record['house_number']))
+            && !strlen(trim($record['house_number']) > 3)
         ) {
             return $record['house_number'];
         }
 
         if (str_contains(strtoupper($record['house_number']), 'BIS')
             || str_contains(strtoupper($record['house_number']), 'B')) {
-            return (int) $record['house_number'] . 'b';
+            return (int)$record['house_number'] . 'b';
         }
 
         if (str_contains(strtoupper($record['house_number']), 'TER')
             || str_contains(strtoupper($record['house_number']), 'T')) {
-            return (int) $record['house_number'] . 't';
+            return (int)$record['house_number'] . 't';
         }
 
         return null;
+    }
+
+    private function setApptCounts()
+    {
+        $counts = array_diff(array_count_values($this->apptOccurence), [1]);
+        $this->io->section('Counting door occurences');
+        $progress = $this->io->createProgressBar(count($counts));
+
+        foreach ($counts as $key => $count) {
+            $appt = explode('|', $key) [1];
+            $number = explode('_', $key)[0];
+            $street = explode('_', str_replace('|' . $appt, '', $key))[1];
+
+            $addresses = $this->addressRepository->findBy([
+                'add1' => $appt,
+                'number' => $number,
+                'street' => $street
+            ]);
+
+            foreach ($addresses as $address) {
+                $address->setApptOccurences($count);
+                $this->entityManager->persist($address);
+            }
+
+            $progress->advance();
+        }
+
+        $this->entityManager->flush();
+        $progress->finish();
+    }
+
+    public function setIo(SymfonyStyle $io)
+    {
+        $this->io = $io;
+        return $this;
     }
 }

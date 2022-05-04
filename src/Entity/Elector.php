@@ -48,6 +48,11 @@ class Elector
      */
     private $groupedAddress;
 
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $birthdate;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -121,6 +126,18 @@ class Elector
     public function setGroupedAddress(?GroupedAddress $groupedAddress): self
     {
         $this->groupedAddress = $groupedAddress;
+
+        return $this;
+    }
+
+    public function getBirthdate(): ?\DateTimeInterface
+    {
+        return $this->birthdate;
+    }
+
+    public function setBirthdate(?\DateTimeInterface $birthdate): self
+    {
+        $this->birthdate = $birthdate;
 
         return $this;
     }

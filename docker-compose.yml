@@ -1,13 +1,12 @@
 version: "3.8"
 
 services:
-
     mariadb-service:
         image: mariadb:10.8.2
         container_name: mariadb-eleclist-container
         restart: on-failure
         ports:
-            - "3306:3306"
+            - "3305:3305"
         volumes:
             - db-data-eleclist:/var/lib/mysql
         environment:
@@ -22,7 +21,7 @@ services:
         depends_on:
             - mariadb-service
         ports:
-            - "8080:80"
+            - "8070:80"
         environment:
             PMA_HOST: mariadb-service
         networks:
@@ -30,14 +29,14 @@ services:
 
     php74-service:
         build:
-            context: ./dockerfiles
-            dockerfile: php.dockerfile
+            context: ./
+            dockerfile: Dockerfile
             args:
                 - UID=${UID:-1000}
                 - GID=${GID:-1000}
         container_name: php74-eleclist-container
         ports:
-            - "8741:80"
+            - "8000:80"
         volumes:
             - ./php/vhosts:/etc/apache2/sites-enabled
             - ./:/var/www
@@ -45,23 +44,14 @@ services:
         networks:
             - symfony
 
-    composer:
-        build:
-            context: ./dockerfiles
-            dockerfile: composer.dockerfile
-            args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
-        container_name: composer
+    encore:
+        image: node:14-alpine
         volumes:
-            - ./:/var/www
-        working_dir: /var/www
-        depends_on:
-            - php74-service
-        user: symfony
-        entrypoint: [ 'composer', '--ignore-platform-reqs' ]
-        networks:
-            - symfony
+            - .:/app
+        ports:
+            - "${DEV_SERVER_PORT:-8090}:8090"
+        working_dir: /app
+        command: [ "yarn", "dev-server", "--host=0.0.0.0" ]
 
 networks:
     symfony:

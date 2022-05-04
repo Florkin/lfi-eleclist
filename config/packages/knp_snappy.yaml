@@ -1,0 +1,5 @@
+knp_snappy:
+    pdf:
+        enabled:    true
+        binary:     '%kernel.project_dir%/vendor/bin/wkhtmltopdf-amd64'
+        options:    []

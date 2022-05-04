@@ -11,5 +11,6 @@ parameters:
       add2: complément 2
       postcode: code postal
       city: commune
+      birthdate: date de naissance
 
 

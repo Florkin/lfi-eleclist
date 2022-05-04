@@ -21,56 +21,28 @@ class GroupedAddressRepository extends ServiceEntityRepository
         parent::__construct($registry, GroupedAddress::class);
     }
 
-    /**
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function add(GroupedAddress $entity, bool $flush = true): void
+    public function findStreets(string $city)
     {
-        $this->_em->persist($entity);
-        if ($flush) {
-            $this->_em->flush();
-        }
+        return $this->createQueryBuilder('a')
+            ->select('a.street')
+            ->join('a.electors', 'e')
+            ->andWhere('a.city = :city')
+            ->groupBy('a.street')
+            ->orderBy('a.street', 'asc')
+            ->setParameter('city', $city)
+            ->getQuery();
     }
 
-    /**
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function remove(GroupedAddress $entity, bool $flush = true): void
+    public function findByStreet(string $street, string $city)
     {
-        $this->_em->remove($entity);
-        if ($flush) {
-            $this->_em->flush();
-        }
-    }
+        return $this->createQueryBuilder('a')
+            ->where('a.street = :street')
+            ->andWhere('a.city = :city')
+            ->setParameter('street', $street)
+            ->setParameter('city', $city)
+            ->addSelect('ABS(a.number) AS HIDDEN intNumber')
+            ->orderBy('intNumber')
+            ->getQuery();
 
-    // /**
-    //  * @return GroupedAddress[] Returns an array of GroupedAddress objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('g')
-            ->andWhere('g.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('g.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
     }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?GroupedAddress
-    {
-        return $this->createQueryBuilder('g')
-            ->andWhere('g.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

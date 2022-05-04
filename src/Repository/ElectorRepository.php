@@ -3,9 +3,11 @@
 namespace App\Repository;
 
 use App\Entity\Elector;
+use App\Entity\GroupedAddress;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,31 +23,18 @@ class ElectorRepository extends ServiceEntityRepository
         parent::__construct($registry, Elector::class);
     }
 
-    /**
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function add(Elector $entity, bool $flush = true): void
+    public function getVoteOfficesByCity(string $city): Query
     {
-        $this->_em->persist($entity);
-        if ($flush) {
-            $this->_em->flush();
-        }
+        return $this->createQueryBuilder('e')
+            ->select('e.vote_office')
+            ->join('e.address', 'a')
+            ->where('a.city = :city')
+            ->setParameter('city', $city)
+            ->groupBy('e.vote_office')
+            ->getQuery();
     }
 
-    /**
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function remove(Elector $entity, bool $flush = true): void
-    {
-        $this->_em->remove($entity);
-        if ($flush) {
-            $this->_em->flush();
-        }
-    }
-
-    public function findByAddressData(array $addressData)
+    public function findByAddressData(array $addressData): Query
     {
         $queryBuilder = $this->createQueryBuilder('e')
             ->join('e.address', 'a');
@@ -55,5 +44,15 @@ class ElectorRepository extends ServiceEntityRepository
         }
 
         return $queryBuilder->getQuery();
+    }
+
+    public function findByAddressSortedByAppt(GroupedAddress $address): Query
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.groupedAddress = :address')
+            ->join('e.address', 'a')
+            ->addOrderBy('a.add1', 'asc')
+            ->setParameter('address', $address)
+            ->getQuery();
     }
 }
