@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Exception\CsvFormatException;
 use App\Handler\AddressGroupHandler;
+use App\Handler\CsvHandler;
 use App\Repository\AddressRepository;
 use App\Repository\ElectorRepository;
 use App\Repository\GroupedAddressRepository;
@@ -24,6 +25,8 @@ class FindGroupsCommand extends Command
     private EntityManagerInterface $entityManager;
     private GroupedAddressRepository $groupedAddressRepository;
     private ElectorRepository $electorRepository;
+    private CsvHandler $csvHandler;
+    private array $failData = [];
 
     public function __construct(
         AddressRepository $addressRepository,
@@ -31,6 +34,7 @@ class FindGroupsCommand extends Command
         EntityManagerInterface $entityManager,
         GroupedAddressRepository $groupedAddressRepository,
         ElectorRepository $electorRepository,
+        CsvHandler $csvHandler,
         string $name = null
     ) {
         $this->addressGroupHandler = $addressGroupHandler;
@@ -38,6 +42,7 @@ class FindGroupsCommand extends Command
         $this->entityManager = $entityManager;
         $this->groupedAddressRepository = $groupedAddressRepository;
         $this->electorRepository = $electorRepository;
+        $this->csvHandler = $csvHandler;
 
         parent::__construct($name);
     }
@@ -57,13 +62,14 @@ class FindGroupsCommand extends Command
         $failCount = 0;
         $total = 0;
         $electorsCount = 0;
-        $totalElectorsCount = count($this->electorRepository->findAll());
+        $totalElectorsCount = 0;
 
         $progress = $io->createProgressBar(count($groupedAddresses));
 
         foreach ($groupedAddresses as $data) {
             $total += 1;
             if (!$this->addressGroupHandler->checkData($data)) {
+                $this->failData[] = $data;
                 $failCount += 1;
                 continue;
             }
@@ -98,6 +104,8 @@ class FindGroupsCommand extends Command
                 . "address due to incomplete address data."
             );
         }
+
+        $this->csvHandler->archiveFailedFromArray($this->failData, 'grouping_fails');
 
         return Command::SUCCESS;
     }

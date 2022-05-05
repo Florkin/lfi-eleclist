@@ -96,11 +96,15 @@ class CsvHandler
         );
     }
 
-    public function archiveFailedFromArray(array $records)
+    public function archiveFailedFromArray(array $records, string $prefix = 'fail')
     {
+        if (empty($records)) {
+            return;
+        }
+
         $this->filesystem->mkdir($this->csvPaths['archives_fails']);
         $writer = Writer::createFromPath(
-            $this->csvPaths['archives_fails'] . '/' . $this->generateDatedFilename('fail'),
+            $this->csvPaths['archives_fails'] . '/' . $this->generateDatedFilename($prefix),
             'w+'
         );
 

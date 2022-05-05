@@ -94,7 +94,7 @@ class ImportCsvCommand extends Command
 
         $io->section('Data import');
         $result = $this->recordHandler->importFile($newFilePath, $io);
-        $this->csvHandler->archiveFailedFromArray($this->recordHandler->getFailedRecords());
+        $this->csvHandler->archiveFailedFromArray($this->recordHandler->getFailedRecords(), 'import_fails');
 
         $io->info('Deleting temporary csv...');
         $this->csvHandler->archive($newFilePath);
