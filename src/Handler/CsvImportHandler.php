@@ -173,6 +173,9 @@ class CsvImportHandler
         }
 
         $houseNumber = $this->formatHouseNumber($record);
+        if (!$houseNumber) {
+            return null;
+        }
 
         $address = new Address();
         $address
@@ -200,10 +203,17 @@ class CsvImportHandler
         $this->failedRecords[] = $record;
     }
 
-    private function formatHouseNumber(array $record)
+    private function formatHouseNumber(array $record): ?string
     {
         if ($record['result_housenumber']) {
             return $record['result_housenumber'];
+        }
+
+        if (
+            !preg_match("/[a-zA-Z]/i", $record['house_number'])
+            && preg_match("/[0-9]/i", $record['house_number'])
+        ) {
+            return $record['house_number'];
         }
 
         if (str_contains(strtoupper($record['house_number']), 'BIS')
@@ -216,6 +226,6 @@ class CsvImportHandler
             return (int) $record['house_number'] . 't';
         }
 
-        return '';
+        return null;
     }
 }
