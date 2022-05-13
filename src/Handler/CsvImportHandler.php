@@ -228,10 +228,6 @@ class CsvImportHandler
             return $record['result_housenumber'];
         }
 
-        if (isset($this->config['only_reliable_data']) && $this->config['only_reliable_data']) {
-            return null;
-        }
-
         if (
             !preg_match("/[a-zA-Z]/i", trim($record['house_number']))
             && preg_match("/[0-9]/i", trim($record['house_number']))

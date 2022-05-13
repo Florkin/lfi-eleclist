@@ -95,6 +95,7 @@ class ImportCsvCommand extends Command
 
         $io->section('Data import');
         $result = $this->recordHandler->importFile($newFilePath);
+
         $this->csvHandler->archiveFailedFromArray($this->recordHandler->getFailedRecords(), 'import_fails');
 
         $this->csvHandler->archive($newFilePath);
