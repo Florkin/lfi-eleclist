@@ -9,7 +9,7 @@
 - `make vendor` Installe les vendor
 - `make database` Crée la base de donnée et execute les migrations
 - `make bash` Accéder à la console du conteneur symfony
-- Connect phpmyadmin : `http://localhost:8080/` - `root / emptyPassword`
+- Acceder à phpmyadmin : `http://localhost:8070/` - `root / emptyPassword`
 
 ## Importer CSV :
 
