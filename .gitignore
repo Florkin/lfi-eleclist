@@ -6,11 +6,18 @@
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /public/archives/
+/public/pdf/
 /public/temp/
 /var/
 /vendor/
-/php/
 ###< symfony/framework-bundle ###
 files/
 
 .idea
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###

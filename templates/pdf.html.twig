@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block header %}
+    <section class="header">
+        <h1 class="h1">{{ city }}</h1>
+    </section>
+{% endblock %}
+
+{% block body %}
+    {% for street in streets %}
+        <section class="table-section">
+            <div class="title-section">
+                <h2 class="h2"><span class="bold">{{ street.street }}</span></h2>
+                <div class="line"></div>
+            </div>
+            <table>
+                <thead class="table-header">
+                <tr>
+                    <th>Numéro</th>
+                    <th class="add1">APPT</th>
+                    <th>Electeurs</th>
+                    <th class="support">Soutien</th>
+                    <th class="phone">Téléphone</th>
+                    <th class="email">Email</th>
+                </tr>
+                </thead>
+                <tbody class="table-body">
+                {% set colored = 0 %}
+                {% set occ = 0 %}
+                {% for address in addresses_by_street(street.street, city) %}
+                    {% for elector in get_electors(address) %}
+                        <tr {% if loop.index is same as 1 %}class="border-top-thick"{% endif %}>
+                            {% if loop.index is same as 1 %}
+                                <td class="number" rowspan="{{ address.electors.count }}">{{ address.number }}</td>
+                            {% endif %}
+                            {% if occ is same as 0 %}
+                                {% set colored = colored is same as 1 ? 0 : 1 %}
+                                <td class="appt{% if colored %} gray{% endif %}"
+                                    rowspan="{{ elector.address.apptOccurences }}">{{ elector.address.add1 }}</td>
+                            {% endif %}
+                            <td {% if colored %}class="gray"{% endif %}>
+                                {{ elector.lastname | upper }} {{ (elector.firstname | split(' '))[0] }} ({{ age(elector.birthdate) }} ans)
+                            </td>
+
+                            <td {% if colored %}class="gray"{% endif %}>
+                                <div class="stars">
+                                    <span class="star"><span></span></span>
+                                    <span class="star"><span></span></span>
+                                    <span class="star"><span></span></span>
+                                    <span class="star"><span></span></span>
+                                    <span class="star"><span></span></span>
+                                </div>
+                            </td>
+
+                            <td {% if colored %}class="gray"{% endif %}>
+                                <div class="cases">
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                    <span class="case"><span></span></span>
+                                </div>
+                            </td>
+                            <td {% if colored %}class="gray"{% endif %}></td>
+
+                            {% if occ is same as 0 %}
+                                {% set occ = elector.address.apptOccurences %}
+                            {% endif %}
+
+                            {% if occ > 0 %}
+                                {% set occ = occ - 1 %}
+                            {% else %}
+                                {% set occ = 0 %}
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    {% endfor %}
+{% endblock %}

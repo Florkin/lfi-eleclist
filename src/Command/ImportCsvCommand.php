@@ -74,10 +74,11 @@ class ImportCsvCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
         $delimiter = $input->getOption('delimiter');
+        $this->recordHandler->setIo($io);
 
         if ($input->getOption('clear')) {
             $io->info('Clearing database...');
-            $this->recordHandler->clear($io);
+            $this->recordHandler->clear();
         }
 
         $io->section(
@@ -93,10 +94,10 @@ class ImportCsvCommand extends Command
         $io->newLine();
 
         $io->section('Data import');
-        $result = $this->recordHandler->importFile($newFilePath, $io);
+        $result = $this->recordHandler->importFile($newFilePath);
+
         $this->csvHandler->archiveFailedFromArray($this->recordHandler->getFailedRecords(), 'import_fails');
 
-        $io->info('Deleting temporary csv...');
         $this->csvHandler->archive($newFilePath);
 
         $io->section("Resultat de l'import");
@@ -106,7 +107,7 @@ class ImportCsvCommand extends Command
         $percentFails = round(($failedLines * 100) / ($successLines + $failedLines), 2);
         $io->warning(
             "$failedLines electors ($percentFails %) failed to import, "
-            . "due to incomplete data (house_number, city and street are required)"
+            . "due to incomplete or ambiguous data (house_number, city and street are required)"
         );
 
         return Command::SUCCESS;

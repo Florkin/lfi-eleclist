@@ -1,6 +1,8 @@
 USER = -it -u1000
 SYMFO = php74-eleclist-container
-PROJECT_PATH = /var/www
+PROJECT_PATH = /app
+SHELL=/bin/bash
+UID := $(shell id -u)
 
 build:
 	docker-compose build
@@ -30,6 +32,9 @@ database:
 	docker exec -it $(SYMFO) bin/console doctrine:database:create
 	docker exec -it $(SYMFO) bin/console doctrine:migration:migrate
 
+bash:
+	docker exec -it $(SYMFO) bash
+
 sh:
 	docker exec -it $(SYMFO) sh
 
@@ -39,3 +44,13 @@ vendor: composer.lock
 
 cc:
 	docker-compose exec -it $(SYMFO) bin/console cache:clear
+
+install-assets:
+	docker-compose run --rm encore yarn install
+
+build-assets:
+	docker-compose run --rm encore yarn build
+
+fix-permissions:
+	sudo chown -R ${UID} ./
+

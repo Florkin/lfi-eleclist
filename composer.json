@@ -8,10 +8,14 @@
     "ext-ctype": "*",
     "ext-curl": "*",
     "ext-iconv": "*",
+    "ext-zip": "*",
     "doctrine/doctrine-bundle": "^2.6",
     "doctrine/doctrine-migrations-bundle": "^3.2",
     "doctrine/orm": "^2.11",
+    "h4cc/wkhtmltopdf-amd64": "^0.12.4",
+    "knplabs/knp-snappy-bundle": "^1.9",
     "league/csv": "^9.8",
+    "nelexa/zip": "^4.0",
     "symfony/console": "5.4.*",
     "symfony/dotenv": "5.4.*",
     "symfony/flex": "^1.17|^2",
@@ -20,7 +24,11 @@
     "symfony/mime": "5.4.*",
     "symfony/proxy-manager-bridge": "5.4.*",
     "symfony/runtime": "5.4.*",
-    "symfony/yaml": "5.4.*"
+    "symfony/twig-bundle": "5.4.*",
+    "symfony/webpack-encore-bundle": "^1.14",
+    "symfony/yaml": "5.4.*",
+    "twig/extra-bundle": "^3.3",
+    "twig/twig": "^2.0"
   },
   "require-dev": {
     "symfony/maker-bundle": "^1.38"

@@ -52,6 +52,11 @@ class Address
      */
     private $elector;
 
+    /**
+     * @ORM\Column(type="smallint", nullable=true)
+     */
+    private $apptOccurences;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -147,6 +152,18 @@ class Address
         }
 
         $this->elector = $elector;
+
+        return $this;
+    }
+
+    public function getApptOccurences(): ?int
+    {
+        return $this->apptOccurences;
+    }
+
+    public function setApptOccurences(?int $apptOccurences): self
+    {
+        $this->apptOccurences = $apptOccurences;
 
         return $this;
     }
